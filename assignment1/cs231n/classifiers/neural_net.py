@@ -80,9 +80,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        output1 = X.dot(W1) + b1
-        output2 = np.maximum(0, output1)
-        scores = output2.dot(W2) + b2
+        fc1 = X.dot(W1) + b1
+        X2 = np.maximum(0, fc1)
+        scores = X2.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -118,20 +118,20 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        softmax[np.arange(N), y] -= 1\
+        softmax[np.arange(N), y] -= 1
+        softmax /= N
 
-        dW2 = output1.T.dot(softmax)
+        dW2 = X2.T.dot(softmax)
         dW2 += reg * 2 * W2
 
-        db2 = np.sum(softmax, axis=0, keepdims=True)
+        db2 = np.sum(softmax, axis=0)
 
-        dhidden = softmax.dot(dW2.T)
-        dhidden[output2 <= 0] = 0
+        dhidden = softmax.dot(W2.T)
+        dhidden[fc1 <= 0] = 0
         dW1 = X.T.dot(dhidden)
         dW1 += reg * 2 * W1
 
-        db1 = np.sum(dhidden, axis=0, keepdims=True)
-        db1 = db1.sum(axis=0)
+        db1 = np.sum(dhidden, axis=0)
         grads = {'W1':dW1, 'b1':db1, 'W2':dW2, 'b2':db2}
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -243,7 +243,7 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        y_pred = np.argmax(self.loss(X), axis=1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
