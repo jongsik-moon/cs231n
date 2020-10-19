@@ -80,7 +80,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        output1 = X.dot(W1) + b1
+        output2 = np.maximum(0, output1)
+        scores = output2.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -98,7 +100,12 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        shift = scores - np.max(scores, axis=1, keepdims=True)
+        softmax = np.exp(shift) / np.sum(np.exp(shift), axis=1, keepdims=True)
+        loss = np.sum(-np.log(softmax[np.arange(N),y]))
+
+        loss /= N
+        loss += reg * np.sum(W1*W1) + reg * np.sum(W2*W2)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,7 +118,21 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        softmax[np.arange(N), y] -= 1\
+
+        dW2 = output1.T.dot(softmax)
+        dW2 += reg * 2 * W2
+
+        db2 = np.sum(softmax, axis=0, keepdims=True)
+
+        dhidden = softmax.dot(dW2.T)
+        dhidden[output2 <= 0] = 0
+        dW1 = X.T.dot(dhidden)
+        dW1 += reg * 2 * W1
+
+        db1 = np.sum(dhidden, axis=0, keepdims=True)
+        db1 = db1.sum(axis=0)
+        grads = {'W1':dW1, 'b1':db1, 'W2':dW2, 'b2':db2}
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -156,7 +177,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            rand_ind = np.random.choice(num_train, batch_size)
+            X_batch = X[rand_ind]
+            y_batch = y[rand_ind]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -171,8 +194,10 @@ class TwoLayerNet(object):
             # stored in the grads dictionary defined above.                         #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+            for key in self.params:
+                self.params[key] -= learning_rate * grads[key]
+            
 
-            pass
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
