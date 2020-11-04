@@ -203,8 +203,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        mu = x.mean(axis=0)
+        var = x.var(axis=0) + eps
+        std = np.sqrt(var)
+        z = (x-mu) / std
+        out = gamma * x + beta
+ 
+        running_mean = momentum * running_mean + (1 - momentum) * mu
+        running_var = momentum * running_var + (1 - momentum) * var
 
+        cache = {'x':x, 'mean':mu, 'std':std, 'gamma':gamma, 'beta':beta, 'z':z}
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -218,7 +226,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        out = gamma * (x-running_mean) / np.sqrt(running_var + eps) + beta
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -260,7 +268,18 @@ def batchnorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dbeta = dout.sum(axis=0)
+    dgamma = np.sum(dout * cache['z'], axis=0)
+
+    dfdz = dout * cache['gamma']                                    
+    dudx = 1/N                                                      
+    dvdx = 2/N * (cache['x'] - cache['mean'])                      
+    dzdx = 1 / cache['std']                                         
+    dzdu = -1 / cache['std']                                        
+    dzdv = -0.5*(cache['var']**-1.5)*(cache['x']-cache['mean'])    
+    dvdu = -2/N * np.sum(cache['x'] - cache['mean'], axis=0)        
+
+    dx = dfdz*dzdx + np.sum(dfdz*dzdu,axis=0)*dudx + np.sum(dfdz*dzdv,axis=0)*(dvdx+dvdu*dudx)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -295,7 +314,8 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+
+    
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################

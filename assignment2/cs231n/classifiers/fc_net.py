@@ -194,7 +194,7 @@ class FullyConnectedNet(object):
         self.num_layers = 1 + len(hidden_dims)
         self.dtype = dtype
         self.params = {}
-
+        print("suck")
         ############################################################################
         # TODO: Initialize the parameters of the network, storing all values in    #
         # the self.params dictionary. Store weights and biases for the first layer #
@@ -282,12 +282,34 @@ class FullyConnectedNet(object):
         caches = []
         gamma, beta, bn_params = None, None, None
         for i in range(self.num_layers - 1):
+            print(i)
             W = self.params['W' + str(i+1)]
             b = self.params['b' + str(i+1)]
 
             if self.normalization != None:
                 gamma = self.params['gamma' + str(i+1)]
                 beta = self.params['beta' + str(i+1)]
+            fc_out, fc_cache = affine_forward(X, W, b)
+            if self.normalization == 'batchnorm':
+                norm_out, norm_cache = batch_forward(fc_out, gamma, beta, bn_param)
+            elif self.normalization == 'layernorm':
+                norm_out, norm_cache = layer_forward(fc_out, gamma, beta, bn_param)
+            relu_out, relu_cache = relu_forward(norm_out)
+            if self.use_dropout:
+                do_out, do_cache = dropout_forward(relu_out, self.droupout_param)
+                x = do_out
+                caches.append(fc_cache, norm_cache, relu_cache, do_cache)
+            else:
+                x = relu_out
+                caches.append(fc_cache, norm_cache, relu_cache)
+
+        W = self.params['W' + str(self.num_layers)]
+        b = self.params['b' + str(self.num_layers)]
+
+        scores, cache = affine_forward(x, W, b)
+        caches.append(cache)
+
+	    
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -315,7 +337,37 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, soft_grad = softmax_loss(scores, y)            
+        for i in range(self.num_layers):
+            W = self.params['W' + str(i+1)]
+            loss += 0.5 * self.reg * np.sum(W*W)
+
+        dout = soft_grad
+        dout, dW, db = affine_backward(dout, cache[self.num_layer - 1])
+        grads['W' + str(self.num_layers)] = dw + self.reg * self.params['W' + str(self.num_layers)]
+        grads['b' + str(self.num_layers)] = db
+            
+        for i in range(self.num_layers - 2, -1, -1):
+            if self.use_dropout:
+                dout = dropout_backward(dout, caches[i])
+            dout = relu_backward(dout, relu_caches[i])
+            dgamma, dbeta = None, None
+            if self.normalization == 'batchnorm':
+                dout, dgamma, dbeta = batchnorm_backward(dout, caches[i])
+            elif self.normalization == 'layernorm':
+                dout, dgamma, dbeta = layernorm_backward(dout, caches[i])
+            dx, dw, db = affine_backward(dout, caches[i])
+            if self.normalization != None:
+                grads['gamma' + str(i+1)] = dgamma
+                grads['beta' + str(i+1)] = dbeta
+            grads['W' + str(i+1)] = dw + self.reg * self.params['W' +
+            str(i+1)]
+            grads['b' + str(i+1)] = db
+            dout = dx
+
+
+
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
