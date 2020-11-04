@@ -209,8 +209,16 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        layers_dims = np.hstack([input_dim, hidden_dims, num_classes])
+        for i in range(self.num_layers):
+            self.params['W'+str(i+1)] = np.random.normal(0, weight_scale, size=(layers_dims[i], layers_dims[i+1]))
+            self.params['b'+str(i+1)] = np.zeros(layers_dims[i+1])
 
+        if self.normalization != None:
+            for i in range(self.num_layers - 1):
+                self.params['gamma' + str(i+1)] = np.ones(layers_dims[i+1])
+                self.params['beta' + str(i+1)] = np.zeros(layers_dims[i+1])
+     
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -271,7 +279,16 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        caches = []
+        gamma, beta, bn_params = None, None, None
+        for i in range(self.num_layers - 1):
+            W = self.params['W' + str(i+1)]
+            b = self.params['b' + str(i+1)]
+
+            if self.normalization != None:
+                gamma = self.params['gamma' + str(i+1)]
+                beta = self.params['beta' + str(i+1)]
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
