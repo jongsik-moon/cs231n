@@ -296,7 +296,7 @@ class FullyConnectedNet(object):
                     out, norm_cache = layernorm_forward(out, gamma, beta, self.bn_params[i])
             out, relu_cache = relu_forward(out)
             if self.use_dropout:
-                out, do_cache = dropout_forward(out, self.droupout_param)
+                out, do_cache = dropout_forward(out, self.dropout_param)
             caches.append((fc_cache, norm_cache, relu_cache, do_cache))
             x = out
         W = self.params['W' + str(self.num_layers)]
